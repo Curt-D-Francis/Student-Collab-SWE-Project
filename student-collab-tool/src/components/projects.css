@@ -1,0 +1,14 @@
+.project-container {
+    padding: 20px;
+    font-family: Arial, sans-serif;
+    text-align: center;
+  }
+  
+  .project-container h1 {
+    color: #1abc9c;
+  }
+  
+  .project-container p {
+    color: #2c3e50;
+  }
+  
