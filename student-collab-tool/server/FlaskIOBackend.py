@@ -67,4 +67,4 @@ def handle_message(data):
     emit('receive_message', message, room=project_id)
 
 if __name__ == '__main__':
-    socketio.run(app, debug=True, port=3000)
+    socketio.run(app, debug=True, port=5000, allow_unsafe_werkzeug=True)

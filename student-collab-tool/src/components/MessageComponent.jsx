@@ -4,7 +4,7 @@ import { Send } from "lucide-react";
 import "./messaging.css";
 
 // Socket connection
-const SOCKET_URL = "http://localhost:3000";
+const SOCKET_URL = "http://localhost:5000";
 
 const MessageComponent = ({ projectId, currentUser }) => {
   const [socket, setSocket] = useState(null);
