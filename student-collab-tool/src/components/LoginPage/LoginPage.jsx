@@ -1,76 +1,141 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from 'react';
 import supabase from "../../config/supabaseClient";
-import './LoginPage.css'; 
+import './LoginPage.css';
 import { useNavigate } from 'react-router-dom';
 
 const LoginPage = () => {
     const [email, setEmail] = useState('');
     const [password, setPassword] = useState('');
-    const [isSignUp, setIsSignUp] = useState(false); 
+    const [name, setName] = useState('');
+    const [isSignUp, setIsSignUp] = useState(false);
+    const [role, setRole] = useState('student');
     const navigate = useNavigate();
 
+    useEffect(() => {
+        const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => { // Set up the auth state change listener
+            console.log("Auth state changed: ", event, session);
+
+            if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
+                if (session?.user) {
+                    console.log("User logged in:", session.user);
+
+                    // this part should fetch the user profile to get the role
+                    const { data: profile, error } = await supabase
+                        .from('profiles')
+                        .select('role')
+                        .eq('id', session.user.id)
+                        .single();
+
+                    if (error) {
+                        console.error('Error fetching profile:', error.message);
+                        return;
+                    }
+
+                    console.log("Fetched profile:", profile);
+
+                    // this part should reroute the user based on the role they chose
+                    if (profile?.role === 'admin') {
+                        console.log("Redirecting to Admin Page...");
+                        navigate('/admin');
+                    } else if (profile?.role === 'student') {
+                        console.log("Redirecting to Student Page...");
+                        navigate('/student');
+                    } else {
+                        console.error("Role is undefined or invalid.");
+                    }
+                }
+            }
+        });
+
+        return () => {
+            if (listener && typeof listener.unsubscribe === 'function') {
+                listener.unsubscribe();
+            }
+        };
+    }, [navigate]);
+
+    //login function
     const handleLogin = async (e) => {
         e.preventDefault();
-        const { data: user, error } = await supabase.auth.signInWithPassword({
+    
+        console.log('Logging in with email:', email);
+    
+        const { data: user, error: loginError } = await supabase.auth.signInWithPassword({
             email,
             password,
         });
-
-        if (error) {
-            console.error("Login failed:", error.message);
+    
+        if (loginError) {
+            console.error('Login failed:', loginError.message);
             return;
         }
+    
+        if (!user) {
+            console.error('User object is not available after login.');
+            return;
+        }
+    
+        console.log('User logged in:', user);
+    
+        const { data: profile, error: profileError } = await supabase         // fetches the user's profile to get the role
 
-        // Fetch user profile to get the role
-        const { data: profile, error: profileError } = await supabase
             .from('profiles')
             .select('role')
             .eq('id', user.id)
-            .single();      
-
+            .single();
+    
         if (profileError) {
-            console.error("Failed to fetch profile:", profileError.message);
+            console.error('Error fetching profile:', profileError.message);
             return;
         }
-
-        if (!profile || !profile.role) {
-            console.error("User's role is not defined");
-            navigate('/');  // Redirect to login or show an error
-            return;
-        }
-
-        // Redirect based on role
-        if (profile.role === 'admin') {
+    
+        console.log('Fetched profile:', profile);
+    
+        // reroutes based on the role
+        if (profile?.role === 'admin') {
+            console.log("Redirecting to Admin Page...");
             navigate('/admin');
-        } else {
+        } else if (profile?.role === 'student') {
+            console.log("Redirecting to Student Page...");
             navigate('/student');
+        } else {
+            console.error("Role is undefined or invalid.");
         }
     };
+    
 
     const handleSignUp = async (e) => {
         e.preventDefault();
-        const { data: user, error } = await supabase.auth.signUp({
+    
+        console.log('Signing up with email:', email);
+    
+        const { user, error: signupError } = await supabase.auth.signUp({
             email,
             password,
         });
-
-        if (error) {
-            console.error("Sign-up failed:", error.message);
+    
+        if (signupError) {
+            console.error('Sign-up error:', signupError.message);
             return;
         }
-
-        // Insert the new user into the profiles table with default role 'student'
-        const { error: profileError } = await supabase
-            .from('profiles')
-            .insert([{ id: user.id, email: user.email, role: 'student' }]);
-
-        if (profileError) {
-            console.error("Failed to insert profile:", profileError.message);
-        } else {
-            console.log("User signed up successfully:", user.email);
-            navigate('/student');  
+    
+        if (user) {
+            console.log('User created:', user);
+    
+            // creates new profile row in the profile table in supabase
+            const { error: profileError } = await supabase
+                .from('profiles')
+                .upsert([{ id: user.id, email: user.email, name, role }]);
+    
+            if (profileError) {
+                console.error('Profile creation error:', profileError.message);
+                return;
+            }
+    
+            console.log('Profile created/updated:', { id: user.id, email: user.email, name, role });
         }
     };
+    
 
     return (
         <div className="login-page">
@@ -99,8 +164,33 @@ const LoginPage = () => {
                             required
                         />
                     </div>
+
+                    {isSignUp && (
+                        <>
+                            <div className="input-group">
+                                <label htmlFor="name">Name</label>
+                                <input
+                                    type="text"
+                                    id="name"
+                                    value={name}
+                                    onChange={(e) => setName(e.target.value)}
+                                    placeholder="Enter your name"
+                                    required
+                                />
+                            </div>
+                            <div className="input-group">
+                                <label htmlFor="role">Choose your role</label>
+                                <select id="role" value={role} onChange={(e) => setRole(e.target.value)}>
+                                    <option value="student">Student</option>
+                                    <option value="admin">Admin</option>
+                                </select>
+                            </div>
+                        </>
+                    )}
+
                     <button type="submit" className="btn">{isSignUp ? 'Sign Up' : 'Login'}</button>
                 </form>
+
                 <div>
                     <p>{isSignUp ? 'Already have an account?' : "Don't have an account?"}</p>
                     <button onClick={() => setIsSignUp(!isSignUp)}>
