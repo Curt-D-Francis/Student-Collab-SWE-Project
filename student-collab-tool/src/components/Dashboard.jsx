@@ -1,6 +1,7 @@
 import React from "react";
 import { Link } from "react-router-dom";
 import "./Dashboard.css";
+import TaskManagementSystem from "./TaskManagement";
 
 const Dashboard = () => {
   return (
@@ -9,9 +10,15 @@ const Dashboard = () => {
       <nav className="navigation-menu">
         <h2>Menu</h2>
         <ul>
-          <li><Link to="/messages">Messaging</Link></li>
-          <li><Link to="/projects">Projects</Link></li>
-          <li><Link to="/settings">Settings</Link></li>
+          <li>
+            <Link to="/messages">Messaging</Link>
+          </li>
+          <li>
+            <Link to="/projects">Projects</Link>
+          </li>
+          <li>
+            <Link to="/settings">Settings</Link>
+          </li>
         </ul>
       </nav>
 
@@ -31,18 +38,7 @@ const Dashboard = () => {
           <section className="tasks-summary">
             <h2>Tasks Summary</h2>
             <ul className="tasks-list">
-              <li>
-                <span>Task 1</span>
-                <span className="status pending">Pending</span>
-              </li>
-              <li>
-                <span>Task 2</span>
-                <span className="status in-progress">In Progress</span>
-              </li>
-              <li>
-                <span>Task 3</span>
-                <span className="status completed">Completed</span>
-              </li>
+              <TaskManagementSystem />
             </ul>
           </section>
 
