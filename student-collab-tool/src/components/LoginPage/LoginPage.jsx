@@ -8,41 +8,18 @@ const LoginPage = () => {
     const [password, setPassword] = useState('');
     const [name, setName] = useState('');
     const [isSignUp, setIsSignUp] = useState(false);
-    const [role, setRole] = useState('student');
+    const [role, setRole] = useState('student'); 
     const navigate = useNavigate();
 
     useEffect(() => {
-        const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => { // Set up the auth state change listener
+        const { data: listener } = supabase.auth.onAuthStateChange(async (event, session) => {
             console.log("Auth state changed: ", event, session);
 
             if (event === 'SIGNED_IN' || event === 'USER_UPDATED') {
                 if (session?.user) {
                     console.log("User logged in:", session.user);
 
-                    // this part should fetch the user profile to get the role
-                    const { data: profile, error } = await supabase
-                        .from('profiles')
-                        .select('role')
-                        .eq('id', session.user.id)
-                        .single();
-
-                    if (error) {
-                        console.error('Error fetching profile:', error.message);
-                        return;
-                    }
-
-                    console.log("Fetched profile:", profile);
-
-                    // this part should reroute the user based on the role they chose
-                    if (profile?.role === 'admin') {
-                        console.log("Redirecting to Admin Page...");
-                        navigate('/admin');
-                    } else if (profile?.role === 'student') {
-                        console.log("Redirecting to Student Page...");
-                        navigate('/student');
-                    } else {
-                        console.error("Role is undefined or invalid.");
-                    }
+                    navigate('/dashboard'); //routes to dashboard after login
                 }
             }
         });
@@ -54,7 +31,7 @@ const LoginPage = () => {
         };
     }, [navigate]);
 
-    //login function
+    // function to login
     const handleLogin = async (e) => {
         e.preventDefault();
     
@@ -77,33 +54,11 @@ const LoginPage = () => {
     
         console.log('User logged in:', user);
     
-        const { data: profile, error: profileError } = await supabase         // fetches the user's profile to get the role
-
-            .from('profiles')
-            .select('role')
-            .eq('id', user.id)
-            .single();
-    
-        if (profileError) {
-            console.error('Error fetching profile:', profileError.message);
-            return;
-        }
-    
-        console.log('Fetched profile:', profile);
-    
-        // reroutes based on the role
-        if (profile?.role === 'admin') {
-            console.log("Redirecting to Admin Page...");
-            navigate('/admin');
-        } else if (profile?.role === 'student') {
-            console.log("Redirecting to Student Page...");
-            navigate('/student');
-        } else {
-            console.error("Role is undefined or invalid.");
-        }
+        // routes to dashboard upon login
+        navigate('/dashboard');
     };
-    
 
+    // function to sign up
     const handleSignUp = async (e) => {
         e.preventDefault();
     
@@ -122,7 +77,7 @@ const LoginPage = () => {
         if (user) {
             console.log('User created:', user);
     
-            // creates new profile row in the profile table in supabase
+            // Creates a new profile row in the profile table in supabase upon signing up
             const { error: profileError } = await supabase
                 .from('profiles')
                 .upsert([{ id: user.id, email: user.email, name, role }]);
@@ -135,7 +90,6 @@ const LoginPage = () => {
             console.log('Profile created/updated:', { id: user.id, email: user.email, name, role });
         }
     };
-    
 
     return (
         <div className="login-page">

@@ -1,8 +1,22 @@
 import React from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom"; 
+import supabase from "../config/supabaseClient";
 import "./Dashboard.css";
 
 const Dashboard = () => {
+  const navigate = useNavigate();
+
+  // Logout function
+  const handleLogout = async () => {
+    try {
+      await supabase.auth.signOut();
+      console.log("User logged out");
+      navigate("/");  // goes back to LoginPage after logout
+    } catch (error) {
+      console.error("Error during logout:", error.message);
+    }
+  };
+
   return (
     <div className="dashboard-container">
       {/* Navigation Menu */}
@@ -55,6 +69,13 @@ const Dashboard = () => {
               <li>Task "Task 3" has been completed!</li>
             </ul>
           </section>
+
+          {/* Logout button */}
+          <div className="logout-container"> 
+            <button onClick={handleLogout} className="btn logout-btn">
+              Logout
+            </button>
+          </div>
         </main>
       </div>
     </div>

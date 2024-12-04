@@ -1,6 +1,6 @@
 import supabase from '../config/supabaseClient';
 
-// Check if user is logged in
+// Checks if user is logged in
 export const getCurrentUser = async () => {
   const { data, error } = await supabase.auth.getUser();
   if (error) {
